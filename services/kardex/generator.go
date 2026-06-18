@@ -411,32 +411,33 @@ func (g *Generator) addSUNAT13InsumoTable(pdf *gofpdf.Fpdf, insumo *KardexInsumo
 	// Header SUNAT
 	pdf.SetFont("Arial", "B", 5.5)
 	g.style.ApplyHeader(pdf)
+	hbf := g.style.HeaderBorderFlag()
 
 	// Fila 1: colspanes
-	pdf.CellFormat(cw[0], 3.5, "Fecha", "1", 0, "C", true, 0, "")
-	pdf.CellFormat(cw[1]+cw[2]+cw[3], 3.5, "Comprobante", "1", 0, "C", true, 0, "")
-	pdf.CellFormat(cw[4], 3.5, "T. Oper.", "1", 0, "C", true, 0, "")
-	pdf.CellFormat(cw[5]+cw[6]+cw[7], 3.5, "Entradas", "1", 0, "C", true, 0, "")
-	pdf.CellFormat(cw[8]+cw[9]+cw[10], 3.5, "Salidas", "1", 0, "C", true, 0, "")
-	pdf.CellFormat(cw[11]+cw[12]+cw[13], 3.5, "Saldo Final", "1", 0, "C", true, 0, "")
+	pdf.CellFormat(cw[0], 3.5, "Fecha", hbf, 0, "C", true, 0, "")
+	pdf.CellFormat(cw[1]+cw[2]+cw[3], 3.5, "Comprobante", hbf, 0, "C", true, 0, "")
+	pdf.CellFormat(cw[4], 3.5, "T. Oper.", hbf, 0, "C", true, 0, "")
+	pdf.CellFormat(cw[5]+cw[6]+cw[7], 3.5, "Entradas", hbf, 0, "C", true, 0, "")
+	pdf.CellFormat(cw[8]+cw[9]+cw[10], 3.5, "Salidas", hbf, 0, "C", true, 0, "")
+	pdf.CellFormat(cw[11]+cw[12]+cw[13], 3.5, "Saldo Final", hbf, 0, "C", true, 0, "")
 	pdf.Ln(-1)
 
 	// Fila 2: sub-headers
 	g.style.ApplyHeader(pdf)
-	pdf.CellFormat(cw[0], 3.5, "", "1", 0, "C", true, 0, "")
-	pdf.CellFormat(cw[1], 3.5, "Tipo", "1", 0, "C", true, 0, "")
-	pdf.CellFormat(cw[2], 3.5, "Serie", "1", 0, "C", true, 0, "")
-	pdf.CellFormat(cw[3], 3.5, "Numero", "1", 0, "C", true, 0, "")
-	pdf.CellFormat(cw[4], 3.5, "", "1", 0, "C", true, 0, "")
-	pdf.CellFormat(cw[5], 3.5, "Cant.", "1", 0, "C", true, 0, "")
-	pdf.CellFormat(cw[6], 3.5, "P.Unit.", "1", 0, "C", true, 0, "")
-	pdf.CellFormat(cw[7], 3.5, "Total", "1", 0, "C", true, 0, "")
-	pdf.CellFormat(cw[8], 3.5, "Cant.", "1", 0, "C", true, 0, "")
-	pdf.CellFormat(cw[9], 3.5, "P.Unit.", "1", 0, "C", true, 0, "")
-	pdf.CellFormat(cw[10], 3.5, "Total", "1", 0, "C", true, 0, "")
-	pdf.CellFormat(cw[11], 3.5, "Cant.", "1", 0, "C", true, 0, "")
-	pdf.CellFormat(cw[12], 3.5, "P.Unit.", "1", 0, "C", true, 0, "")
-	pdf.CellFormat(cw[13], 3.5, "Total", "1", 0, "C", true, 0, "")
+	pdf.CellFormat(cw[0], 3.5, "", hbf, 0, "C", true, 0, "")
+	pdf.CellFormat(cw[1], 3.5, "Tipo", hbf, 0, "C", true, 0, "")
+	pdf.CellFormat(cw[2], 3.5, "Serie", hbf, 0, "C", true, 0, "")
+	pdf.CellFormat(cw[3], 3.5, "Numero", hbf, 0, "C", true, 0, "")
+	pdf.CellFormat(cw[4], 3.5, "", hbf, 0, "C", true, 0, "")
+	pdf.CellFormat(cw[5], 3.5, "Cant.", hbf, 0, "C", true, 0, "")
+	pdf.CellFormat(cw[6], 3.5, "P.Unit.", hbf, 0, "C", true, 0, "")
+	pdf.CellFormat(cw[7], 3.5, "Total", hbf, 0, "C", true, 0, "")
+	pdf.CellFormat(cw[8], 3.5, "Cant.", hbf, 0, "C", true, 0, "")
+	pdf.CellFormat(cw[9], 3.5, "P.Unit.", hbf, 0, "C", true, 0, "")
+	pdf.CellFormat(cw[10], 3.5, "Total", hbf, 0, "C", true, 0, "")
+	pdf.CellFormat(cw[11], 3.5, "Cant.", hbf, 0, "C", true, 0, "")
+	pdf.CellFormat(cw[12], 3.5, "P.Unit.", hbf, 0, "C", true, 0, "")
+	pdf.CellFormat(cw[13], 3.5, "Total", hbf, 0, "C", true, 0, "")
 	pdf.Ln(-1)
 
 	pdf.SetFont("Arial", "", 5.5)
@@ -449,8 +450,9 @@ func (g *Generator) addSUNAT13InsumoTable(pdf *gofpdf.Fpdf, insumo *KardexInsumo
 		rh := rowHeight(1)
 
 		cx := x
+		rectFlag := g.style.DataRectFlag()
 		for j := 0; j < 14; j++ {
-			pdf.Rect(cx, y, cw[j], rh, "FD")
+			pdf.Rect(cx, y, cw[j], rh, rectFlag)
 			cx += cw[j]
 		}
 
@@ -490,27 +492,28 @@ func (g *Generator) addSUNAT13InsumoTable(pdf *gofpdf.Fpdf, insumo *KardexInsumo
 			// Re-render column headers
 			pdf.SetFont("Arial", "B", 5.5)
 			g.style.ApplyHeader(pdf)
-			pdf.CellFormat(cw[0], 3.5, "Fecha", "1", 0, "C", true, 0, "")
-			pdf.CellFormat(cw[1]+cw[2]+cw[3], 3.5, "Comprobante", "1", 0, "C", true, 0, "")
-			pdf.CellFormat(cw[4], 3.5, "T. Oper.", "1", 0, "C", true, 0, "")
-			pdf.CellFormat(cw[5]+cw[6]+cw[7], 3.5, "Entradas", "1", 0, "C", true, 0, "")
-			pdf.CellFormat(cw[8]+cw[9]+cw[10], 3.5, "Salidas", "1", 0, "C", true, 0, "")
-			pdf.CellFormat(cw[11]+cw[12]+cw[13], 3.5, "Saldo Final", "1", 0, "C", true, 0, "")
+			hbf := g.style.HeaderBorderFlag()
+			pdf.CellFormat(cw[0], 3.5, "Fecha", hbf, 0, "C", true, 0, "")
+			pdf.CellFormat(cw[1]+cw[2]+cw[3], 3.5, "Comprobante", hbf, 0, "C", true, 0, "")
+			pdf.CellFormat(cw[4], 3.5, "T. Oper.", hbf, 0, "C", true, 0, "")
+			pdf.CellFormat(cw[5]+cw[6]+cw[7], 3.5, "Entradas", hbf, 0, "C", true, 0, "")
+			pdf.CellFormat(cw[8]+cw[9]+cw[10], 3.5, "Salidas", hbf, 0, "C", true, 0, "")
+			pdf.CellFormat(cw[11]+cw[12]+cw[13], 3.5, "Saldo Final", hbf, 0, "C", true, 0, "")
 			pdf.Ln(-1)
-			pdf.CellFormat(cw[0], 3.5, "", "1", 0, "C", true, 0, "")
-			pdf.CellFormat(cw[1], 3.5, "Tipo", "1", 0, "C", true, 0, "")
-			pdf.CellFormat(cw[2], 3.5, "Serie", "1", 0, "C", true, 0, "")
-			pdf.CellFormat(cw[3], 3.5, "Numero", "1", 0, "C", true, 0, "")
-			pdf.CellFormat(cw[4], 3.5, "", "1", 0, "C", true, 0, "")
-			pdf.CellFormat(cw[5], 3.5, "Cant.", "1", 0, "C", true, 0, "")
-			pdf.CellFormat(cw[6], 3.5, "P.Unit.", "1", 0, "C", true, 0, "")
-			pdf.CellFormat(cw[7], 3.5, "Total", "1", 0, "C", true, 0, "")
-			pdf.CellFormat(cw[8], 3.5, "Cant.", "1", 0, "C", true, 0, "")
-			pdf.CellFormat(cw[9], 3.5, "P.Unit.", "1", 0, "C", true, 0, "")
-			pdf.CellFormat(cw[10], 3.5, "Total", "1", 0, "C", true, 0, "")
-			pdf.CellFormat(cw[11], 3.5, "Cant.", "1", 0, "C", true, 0, "")
-			pdf.CellFormat(cw[12], 3.5, "P.Unit.", "1", 0, "C", true, 0, "")
-			pdf.CellFormat(cw[13], 3.5, "Total", "1", 0, "C", true, 0, "")
+			pdf.CellFormat(cw[0], 3.5, "", hbf, 0, "C", true, 0, "")
+			pdf.CellFormat(cw[1], 3.5, "Tipo", hbf, 0, "C", true, 0, "")
+			pdf.CellFormat(cw[2], 3.5, "Serie", hbf, 0, "C", true, 0, "")
+			pdf.CellFormat(cw[3], 3.5, "Numero", hbf, 0, "C", true, 0, "")
+			pdf.CellFormat(cw[4], 3.5, "", hbf, 0, "C", true, 0, "")
+			pdf.CellFormat(cw[5], 3.5, "Cant.", hbf, 0, "C", true, 0, "")
+			pdf.CellFormat(cw[6], 3.5, "P.Unit.", hbf, 0, "C", true, 0, "")
+			pdf.CellFormat(cw[7], 3.5, "Total", hbf, 0, "C", true, 0, "")
+			pdf.CellFormat(cw[8], 3.5, "Cant.", hbf, 0, "C", true, 0, "")
+			pdf.CellFormat(cw[9], 3.5, "P.Unit.", hbf, 0, "C", true, 0, "")
+			pdf.CellFormat(cw[10], 3.5, "Total", hbf, 0, "C", true, 0, "")
+			pdf.CellFormat(cw[11], 3.5, "Cant.", hbf, 0, "C", true, 0, "")
+			pdf.CellFormat(cw[12], 3.5, "P.Unit.", hbf, 0, "C", true, 0, "")
+			pdf.CellFormat(cw[13], 3.5, "Total", hbf, 0, "C", true, 0, "")
 			pdf.Ln(-1)
 			pdf.SetFont("Arial", "", 5.5)
 		}
@@ -555,8 +558,9 @@ func (g *Generator) addSUNAT13InsumoTable(pdf *gofpdf.Fpdf, insumo *KardexInsumo
 		y := pdf.GetY()
 		x := leftMargin
 		cx := x
+		rectFlag := g.style.DataRectFlag()
 		for j, txt := range texts {
-			pdf.Rect(cx, y, cw[j], rh, "FD")
+			pdf.Rect(cx, y, cw[j], rh, rectFlag)
 			if txt != "" {
 				pdf.SetXY(cx+cellGap, y+cellGap)
 				pdf.CellFormat(cw[j]-cellGap*2, lineHt, txt, "", 0, aligns[j], false, 0, "")
@@ -873,25 +877,24 @@ func (g *Generator) generateTotalsPDF(gt GlobalTotals, outputPath string) error 
 
 func (g *Generator) createNewPDF() *gofpdf.Fpdf {
 	pdf := gofpdf.New(g.orientation, "mm", "A4", "")
-	pdf.SetMargins(7, 10, 7)
-	pdf.SetAutoPageBreak(true, 12)
+	pdf.SetMargins(7, 7.5, 7)
+	pdf.SetAutoPageBreak(true, 5)
 	pdf.SetFont("Arial", "", 8)
 	pdf.SetCellMargin(0.1)
 	pdf.AliasNbPages("{totalPages}")
 
-	// Encabezado compacto
+	// Encabezado pegado al borde superior — sin espacio extra
 	pdf.SetHeaderFunc(func() {
-		pdf.SetY(3)
+		pdf.SetY(0)
 		pdf.SetFont("Arial", "B", 8)
 		pdf.CellFormat(0, 4, "KARDEX VALORIZADO - "+shared.ToLatin(g.institution.RazonSocial), "", 1, "C", false, 0, "")
 		pdf.SetFont("Arial", "", 7)
 		pdf.CellFormat(0, 3.5, shared.ToLatin(g.periodo), "", 1, "C", false, 0, "")
-		pdf.Ln(1.5)
 	})
 
-	// Pie de página compacto
+	// Pie de página pegado al borde inferior — solo espacio del texto
 	pdf.SetFooterFunc(func() {
-		pdf.SetY(-10)
+		pdf.SetY(-5)
 		pdf.SetFont("Arial", "I", 7)
 		pageStr := fmt.Sprintf("Pagina %d / {totalPages}", pdf.PageNo())
 		pdf.CellFormat(0, 5, pageStr, "", 0, "C", false, 0, "")

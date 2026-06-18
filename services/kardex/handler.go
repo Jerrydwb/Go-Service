@@ -3,6 +3,7 @@ package kardex
 import (
 	"encoding/json"
 	"fmt"
+	"log"
 	"net/http"
 	"os"
 	"runtime"
@@ -124,6 +125,8 @@ func generatePDFHandler(cfg *config.AppConfig, trk *tracker.ProcessTracker) gin.
 
 		filePath := fmt.Sprintf("%s/%s", req.OutputDirectory, filename)
 
+		log.Printf("[KardexPDF] 📄 PDF generado en: %s", filePath)
+
 		// Liberar memoria
 		kardexData.Insumos = nil
 		jsonData = nil
@@ -210,6 +213,12 @@ func generateAllHandler(cfg *config.AppConfig, trk *tracker.ProcessTracker) gin.
 
 		// Generar los 3 formatos
 		results := GenerateAll(kardexData.Insumos, kardexData.Institution, periodo, filenameBase, req.OutputDirectory, processKey, trk, cfg, req.Orientation, req.TableStyle)
+
+		for _, r := range results {
+			if r.Filename != "" {
+				log.Printf("[KardexPDF-All] 📄 %s → %s/%s", r.ReportType, req.OutputDirectory, r.Filename)
+			}
+		}
 
 		metrics := NewGenerator(kardexData.Institution, periodo, cfg, "L", req.TableStyle).CalculateMetrics(kardexData.Insumos)
 

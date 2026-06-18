@@ -13,10 +13,10 @@ import (
 // =============================================================================
 
 const (
-	lineHt     = 3.5  // Altura de cada línea de texto en datos
-	headerHt   = 4.0  // Altura de cada línea en headers
-	cellGap    = 0.2  // Padding interno de cada celda
-	safetyY    = 8.0  // Margen de seguridad para page break (espacio para headers)
+	lineHt     = 2.4  // Altura de cada línea de texto en datos
+	headerHt   = 2.8  // Altura de cada línea en headers
+	cellGap    = 0.0  // Padding interno de cada celda
+	safetyY    = 7.0  // Margen de seguridad para page break (espacio para headers)
 )
 
 // =============================================================================
@@ -134,8 +134,9 @@ func (g *Generator) addProductSummaryPage(pdf *gofpdf.Fpdf, insumos []KardexInsu
 
 		// Dibujar bordes de todas las celdas con la altura de la fila
 		cx := x
+		rectFlag := g.style.DataRectFlag()
 		for j := 0; j < 9; j++ {
-			pdf.Rect(cx, y, colWidths[j], rh, "FD")
+			pdf.Rect(cx, y, colWidths[j], rh, rectFlag)
 			cx += colWidths[j]
 		}
 
@@ -186,25 +187,26 @@ func (g *Generator) addProductSummaryPage(pdf *gofpdf.Fpdf, insumos []KardexInsu
 func (g *Generator) renderSummaryHeaders(pdf *gofpdf.Fpdf, colWidths []float64) {
 	pdf.SetFont("Arial", "B", 6)
 	g.style.ApplyHeader(pdf)
+	hbf := g.style.HeaderBorderFlag()
 
 	// Fila 1
-	pdf.CellFormat(colWidths[0], headerHt, "Nro", "1", 0, "C", true, 0, "")
-	pdf.CellFormat(colWidths[1], headerHt, "Codigo", "1", 0, "C", true, 0, "")
-	pdf.CellFormat(colWidths[2], headerHt, "Producto / Insumo", "1", 0, "C", true, 0, "")
-	pdf.CellFormat(colWidths[3]+colWidths[4]+colWidths[5], headerHt, "Saldo Inicial", "1", 0, "C", true, 0, "")
-	pdf.CellFormat(colWidths[6]+colWidths[7]+colWidths[8], headerHt, "Saldo Final", "1", 0, "C", true, 0, "")
+	pdf.CellFormat(colWidths[0], headerHt, "Nro", hbf, 0, "C", true, 0, "")
+	pdf.CellFormat(colWidths[1], headerHt, "Codigo", hbf, 0, "C", true, 0, "")
+	pdf.CellFormat(colWidths[2], headerHt, "Producto / Insumo", hbf, 0, "C", true, 0, "")
+	pdf.CellFormat(colWidths[3]+colWidths[4]+colWidths[5], headerHt, "Saldo Inicial", hbf, 0, "C", true, 0, "")
+	pdf.CellFormat(colWidths[6]+colWidths[7]+colWidths[8], headerHt, "Saldo Final", hbf, 0, "C", true, 0, "")
 	pdf.Ln(-1)
 
 	// Fila 2
-	pdf.CellFormat(colWidths[0], headerHt, "", "1", 0, "C", true, 0, "")
-	pdf.CellFormat(colWidths[1], headerHt, "", "1", 0, "C", true, 0, "")
-	pdf.CellFormat(colWidths[2], headerHt, "", "1", 0, "C", true, 0, "")
-	pdf.CellFormat(colWidths[3], headerHt, "Cant.", "1", 0, "C", true, 0, "")
-	pdf.CellFormat(colWidths[4], headerHt, "Precio", "1", 0, "C", true, 0, "")
-	pdf.CellFormat(colWidths[5], headerHt, "Total", "1", 0, "C", true, 0, "")
-	pdf.CellFormat(colWidths[6], headerHt, "Cant.", "1", 0, "C", true, 0, "")
-	pdf.CellFormat(colWidths[7], headerHt, "Precio", "1", 0, "C", true, 0, "")
-	pdf.CellFormat(colWidths[8], headerHt, "Total", "1", 0, "C", true, 0, "")
+	pdf.CellFormat(colWidths[0], headerHt, "", hbf, 0, "C", true, 0, "")
+	pdf.CellFormat(colWidths[1], headerHt, "", hbf, 0, "C", true, 0, "")
+	pdf.CellFormat(colWidths[2], headerHt, "", hbf, 0, "C", true, 0, "")
+	pdf.CellFormat(colWidths[3], headerHt, "Cant.", hbf, 0, "C", true, 0, "")
+	pdf.CellFormat(colWidths[4], headerHt, "Precio", hbf, 0, "C", true, 0, "")
+	pdf.CellFormat(colWidths[5], headerHt, "Total", hbf, 0, "C", true, 0, "")
+	pdf.CellFormat(colWidths[6], headerHt, "Cant.", hbf, 0, "C", true, 0, "")
+	pdf.CellFormat(colWidths[7], headerHt, "Precio", hbf, 0, "C", true, 0, "")
+	pdf.CellFormat(colWidths[8], headerHt, "Total", hbf, 0, "C", true, 0, "")
 	pdf.Ln(-1)
 }
 
@@ -235,9 +237,8 @@ func (g *Generator) addInsumoPage(pdf *gofpdf.Fpdf, insumo *KardexInsumo, index,
 	pdf.Ln(1)
 
 	pdf.SetFont("Arial", "B", 6.5)
-	g.style.SeparatorColor.text(pdf)
-	pdf.CellFormat(0, 5, title, "", 1, "L", false, 0, "")
 	colorBlack.text(pdf)
+	pdf.CellFormat(0, 5, title, "", 1, "L", false, 0, "")
 	pdf.Ln(1)
 
 	// Filtrar proformas
@@ -388,17 +389,18 @@ func (g *Generator) buildKardexTable(pdf *gofpdf.Fpdf, movements []KardexMovimie
 	}
 	pdf.SetFont("Arial", "B", 5.5)
 	g.style.ApplyTotales(pdf)
-	pdf.CellFormat(colWidths[0]+colWidths[1]+colWidths[2]+colWidths[3]+colWidths[4], lineHt, "", "1", 0, "C", true, 0, "")
-	pdf.CellFormat(colWidths[5], lineHt, "TOTALES:", "1", 0, "C", true, 0, "")
-	pdf.CellFormat(colWidths[6], lineHt, shared.FormatNumber(totals.cantidadEntradas), "1", 0, "R", true, 0, "")
-	pdf.CellFormat(colWidths[7], lineHt, "", "1", 0, "R", true, 0, "")
-	pdf.CellFormat(colWidths[8], lineHt, shared.FormatNumber(totals.costoEntradas), "1", 0, "R", true, 0, "")
-	pdf.CellFormat(colWidths[9], lineHt, shared.FormatNumber(totals.cantidadSalidas), "1", 0, "R", true, 0, "")
-	pdf.CellFormat(colWidths[10], lineHt, "", "1", 0, "R", true, 0, "")
-	pdf.CellFormat(colWidths[11], lineHt, shared.FormatNumber(totals.costoSalidas), "1", 0, "R", true, 0, "")
-	pdf.CellFormat(colWidths[12], lineHt, "", "1", 0, "R", true, 0, "")
-	pdf.CellFormat(colWidths[13], lineHt, "", "1", 0, "R", true, 0, "")
-	pdf.CellFormat(colWidths[14], lineHt, shared.FormatNumber(costoNeto), "1", 0, "R", true, 0, "")
+	dbf := g.style.DataBorderFlag()
+	pdf.CellFormat(colWidths[0]+colWidths[1]+colWidths[2]+colWidths[3]+colWidths[4], lineHt, "", dbf, 0, "C", true, 0, "")
+	pdf.CellFormat(colWidths[5], lineHt, "TOTALES:", dbf, 0, "C", true, 0, "")
+	pdf.CellFormat(colWidths[6], lineHt, shared.FormatNumber(totals.cantidadEntradas), dbf, 0, "R", true, 0, "")
+	pdf.CellFormat(colWidths[7], lineHt, "", dbf, 0, "R", true, 0, "")
+	pdf.CellFormat(colWidths[8], lineHt, shared.FormatNumber(totals.costoEntradas), dbf, 0, "R", true, 0, "")
+	pdf.CellFormat(colWidths[9], lineHt, shared.FormatNumber(totals.cantidadSalidas), dbf, 0, "R", true, 0, "")
+	pdf.CellFormat(colWidths[10], lineHt, "", dbf, 0, "R", true, 0, "")
+	pdf.CellFormat(colWidths[11], lineHt, shared.FormatNumber(totals.costoSalidas), dbf, 0, "R", true, 0, "")
+	pdf.CellFormat(colWidths[12], lineHt, "", dbf, 0, "R", true, 0, "")
+	pdf.CellFormat(colWidths[13], lineHt, "", dbf, 0, "R", true, 0, "")
+	pdf.CellFormat(colWidths[14], lineHt, shared.FormatNumber(costoNeto), dbf, 0, "R", true, 0, "")
 	pdf.Ln(-1)
 }
 
@@ -434,8 +436,9 @@ func (g *Generator) renderKardexDataRowContent(pdf *gofpdf.Fpdf, cw []float64,
 
 	// Dibujar bordes y texto
 	cx := x
+	rectFlag := g.style.DataRectFlag()
 	for i, txt := range texts {
-		pdf.Rect(cx, y, cw[i], rh, "FD")
+		pdf.Rect(cx, y, cw[i], rh, rectFlag)
 		if txt != "" {
 			pdf.SetXY(cx+cellGap, y+cellGap)
 			pdf.CellFormat(cw[i]-cellGap*2, lineHt, txt, "", 0, aligns[i], false, 0, "")
@@ -453,35 +456,37 @@ func (g *Generator) renderKardexDataRowContent(pdf *gofpdf.Fpdf, cw []float64,
 func (g *Generator) renderKardexHeaderRow1(pdf *gofpdf.Fpdf, colWidths []float64) {
 	pdf.SetFont("Arial", "B", 5.5)
 	g.style.ApplyHeader(pdf)
+	hbf := g.style.HeaderBorderFlag()
 
-	pdf.CellFormat(colWidths[0], headerHt, "Nro", "1", 0, "C", true, 0, "")
-	pdf.CellFormat(colWidths[1], headerHt, "Fecha", "1", 0, "C", true, 0, "")
-	pdf.CellFormat(colWidths[2]+colWidths[3]+colWidths[4], headerHt, "Comprobante", "1", 0, "C", true, 0, "")
-	pdf.CellFormat(colWidths[5], headerHt, "Tipo Op.", "1", 0, "C", true, 0, "")
-	pdf.CellFormat(colWidths[6]+colWidths[7]+colWidths[8], headerHt, "Entradas", "1", 0, "C", true, 0, "")
-	pdf.CellFormat(colWidths[9]+colWidths[10]+colWidths[11], headerHt, "Salidas", "1", 0, "C", true, 0, "")
-	pdf.CellFormat(colWidths[12]+colWidths[13]+colWidths[14], headerHt, "Saldo Final", "1", 0, "C", true, 0, "")
+	pdf.CellFormat(colWidths[0], headerHt, "Nro", hbf, 0, "C", true, 0, "")
+	pdf.CellFormat(colWidths[1], headerHt, "Fecha", hbf, 0, "C", true, 0, "")
+	pdf.CellFormat(colWidths[2]+colWidths[3]+colWidths[4], headerHt, "Comprobante", hbf, 0, "C", true, 0, "")
+	pdf.CellFormat(colWidths[5], headerHt, "Tipo Op.", hbf, 0, "C", true, 0, "")
+	pdf.CellFormat(colWidths[6]+colWidths[7]+colWidths[8], headerHt, "Entradas", hbf, 0, "C", true, 0, "")
+	pdf.CellFormat(colWidths[9]+colWidths[10]+colWidths[11], headerHt, "Salidas", hbf, 0, "C", true, 0, "")
+	pdf.CellFormat(colWidths[12]+colWidths[13]+colWidths[14], headerHt, "Saldo Final", hbf, 0, "C", true, 0, "")
 }
 
 func (g *Generator) renderKardexHeaderRow2(pdf *gofpdf.Fpdf, colWidths []float64) {
 	pdf.SetFont("Arial", "B", 5.5)
 	g.style.ApplyHeader(pdf)
+	hbf := g.style.HeaderBorderFlag()
 
-	pdf.CellFormat(colWidths[0], headerHt, "", "1", 0, "C", true, 0, "")
-	pdf.CellFormat(colWidths[1], headerHt, "", "1", 0, "C", true, 0, "")
-	pdf.CellFormat(colWidths[2], headerHt, "Tipo", "1", 0, "C", true, 0, "")
-	pdf.CellFormat(colWidths[3], headerHt, "Serie", "1", 0, "C", true, 0, "")
-	pdf.CellFormat(colWidths[4], headerHt, "Numero", "1", 0, "C", true, 0, "")
-	pdf.CellFormat(colWidths[5], headerHt, "", "1", 0, "C", true, 0, "")
-	pdf.CellFormat(colWidths[6], headerHt, "Cant.", "1", 0, "C", true, 0, "")
-	pdf.CellFormat(colWidths[7], headerHt, "P.Unit.", "1", 0, "C", true, 0, "")
-	pdf.CellFormat(colWidths[8], headerHt, "Total", "1", 0, "C", true, 0, "")
-	pdf.CellFormat(colWidths[9], headerHt, "Cant.", "1", 0, "C", true, 0, "")
-	pdf.CellFormat(colWidths[10], headerHt, "P.Unit.", "1", 0, "C", true, 0, "")
-	pdf.CellFormat(colWidths[11], headerHt, "Total", "1", 0, "C", true, 0, "")
-	pdf.CellFormat(colWidths[12], headerHt, "Cant.", "1", 0, "C", true, 0, "")
-	pdf.CellFormat(colWidths[13], headerHt, "P.Unit.", "1", 0, "C", true, 0, "")
-	pdf.CellFormat(colWidths[14], headerHt, "Total", "1", 0, "C", true, 0, "")
+	pdf.CellFormat(colWidths[0], headerHt, "", hbf, 0, "C", true, 0, "")
+	pdf.CellFormat(colWidths[1], headerHt, "", hbf, 0, "C", true, 0, "")
+	pdf.CellFormat(colWidths[2], headerHt, "Tipo", hbf, 0, "C", true, 0, "")
+	pdf.CellFormat(colWidths[3], headerHt, "Serie", hbf, 0, "C", true, 0, "")
+	pdf.CellFormat(colWidths[4], headerHt, "Numero", hbf, 0, "C", true, 0, "")
+	pdf.CellFormat(colWidths[5], headerHt, "", hbf, 0, "C", true, 0, "")
+	pdf.CellFormat(colWidths[6], headerHt, "Cant.", hbf, 0, "C", true, 0, "")
+	pdf.CellFormat(colWidths[7], headerHt, "P.Unit.", hbf, 0, "C", true, 0, "")
+	pdf.CellFormat(colWidths[8], headerHt, "Total", hbf, 0, "C", true, 0, "")
+	pdf.CellFormat(colWidths[9], headerHt, "Cant.", hbf, 0, "C", true, 0, "")
+	pdf.CellFormat(colWidths[10], headerHt, "P.Unit.", hbf, 0, "C", true, 0, "")
+	pdf.CellFormat(colWidths[11], headerHt, "Total", hbf, 0, "C", true, 0, "")
+	pdf.CellFormat(colWidths[12], headerHt, "Cant.", hbf, 0, "C", true, 0, "")
+	pdf.CellFormat(colWidths[13], headerHt, "P.Unit.", hbf, 0, "C", true, 0, "")
+	pdf.CellFormat(colWidths[14], headerHt, "Total", hbf, 0, "C", true, 0, "")
 }
 
 // =============================================================================

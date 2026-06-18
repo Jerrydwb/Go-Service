@@ -136,22 +136,52 @@ func (s *TableStyle) ApplyTotales(pdf *gofpdf.Fpdf) {
 
 // ApplySeparator aplica estilo para la línea separadora entre productos.
 func (s *TableStyle) ApplySeparator(pdf *gofpdf.Fpdf) {
+	if s.SeparatorWidth <= 0 {
+		return
+	}
 	s.SeparatorColor.draw(pdf)
 	pdf.SetLineWidth(s.SeparatorWidth)
+}
+
+// HeaderBorderFlag retorna "1" si los bordes del header deben dibujarse, "0" si no.
+// Se usa como parámetro border en pdf.CellFormat — gofpdf interpreta SetLineWidth(0)
+// como hairline de 1px, por eso hay que omitir el flag para no dibujar nada.
+func (s *TableStyle) HeaderBorderFlag() string {
+	if s.HeaderBorderW > 0 {
+		return "1"
+	}
+	return "0"
+}
+
+// DataBorderFlag retorna "1" si los bordes de datos deben dibujarse, "0" si no.
+func (s *TableStyle) DataBorderFlag() string {
+	if s.DataBorderW > 0 {
+		return "1"
+	}
+	return "0"
+}
+
+// DataRectFlag retorna "FD" (fill+draw) si los bordes deben dibujarse, "F" (solo fill) si no.
+// Se usa en pdf.Rect — gofpdf dibuja el borde siempre con "FD" aunque SetLineWidth sea 0.
+func (s *TableStyle) DataRectFlag() string {
+	if s.DataBorderW > 0 {
+		return "FD"
+	}
+	return "F"
 }
 
 // =============================================================================
 // ESTILOS PREDEFINIDOS
 // =============================================================================
 
-// StyleSimple es el estilo actual — bordes grises, sin colores.
+// StyleSimple es el estilo actual — bordes en todas las celdas, sin colores de fondo.
 var StyleSimple = TableStyle{
 	Name: "simple",
 
-	HeaderBg:       colorGrayBG,
+	HeaderBg:       colorWhite,
 	HeaderText:     colorBlack,
 	HeaderBorder:   colorBlack,
-	HeaderBorderW:  0.1,
+	HeaderBorderW:  0.2,
 
 	DataBorder:     colorBlack,
 	DataBorderW:    0.1,
@@ -159,9 +189,9 @@ var StyleSimple = TableStyle{
 	DataText:       colorBlack,
 	DataTextSalida: colorBlack,
 
-	SaldoInitBg:    colorGrayBG,
-	SaldoFinalBg:   colorGrayBG,
-	TotalesBg:      ColorRGB{240, 240, 240},
+	SaldoInitBg:    colorWhite,
+	SaldoFinalBg:   colorWhite,
+	TotalesBg:      colorWhite,
 	TotalesText:    colorBlack,
 
 	SeparatorColor: colorGrayLight,

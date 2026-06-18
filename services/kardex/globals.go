@@ -162,12 +162,13 @@ func (g *Generator) AddGlobalTotalsSection(pdf *gofpdf.Fpdf, gt GlobalTotals) {
 		y := pdf.GetY()
 		x := leftMargin
 		cx := x
+		rectFlag := g.style.DataRectFlag()
 
-		pdf.Rect(cx, y, labelW, rh, "FD")
+		pdf.Rect(cx, y, labelW, rh, rectFlag)
 		pdf.SetXY(cx+cellGap, y+cellGap)
 		pdf.CellFormat(labelW-cellGap*2, lineHt, item.label, "", 0, "L", false, 0, "")
 
-		pdf.Rect(cx+labelW, y, valueW, rh, "FD")
+		pdf.Rect(cx+labelW, y, valueW, rh, rectFlag)
 		pdf.SetXY(cx+labelW+cellGap, y+cellGap)
 		pdf.CellFormat(valueW-cellGap*2, lineHt, item.value, "", 0, "R", false, 0, "")
 
@@ -201,8 +202,9 @@ func (g *Generator) renderGlobalRow(pdf *gofpdf.Fpdf, leftMargin, colLabel, colV
 
 	// Si el primer cell es título, usar colLabel para él y distribuir el resto
 	startIdx := 0
+	rectFlag := g.style.DataRectFlag()
 	if len(cells) > 0 && cells[0].isTitle {
-		pdf.Rect(cx, y, colLabel, rh, "FD")
+		pdf.Rect(cx, y, colLabel, rh, rectFlag)
 		pdf.SetXY(cx+cellGap, y+cellGap)
 		pdf.CellFormat(colLabel-cellGap*2, lineHt, cells[0].label, "", 0, "L", false, 0, "")
 		cx += colLabel
@@ -219,7 +221,7 @@ func (g *Generator) renderGlobalRow(pdf *gofpdf.Fpdf, leftMargin, colLabel, colV
 	cellW := remaining / float64(cellCount)
 
 	for _, cell := range cells[startIdx:] {
-		pdf.Rect(cx, y, cellW, rh, "FD")
+		pdf.Rect(cx, y, cellW, rh, rectFlag)
 
 		if cell.isTitle {
 			pdf.SetXY(cx+cellGap, y+cellGap)
