@@ -1,0 +1,6 @@
+./kardex-pdf-service
+*.json
+*.sh
+test-output/
+
+*.log
