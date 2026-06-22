@@ -174,18 +174,19 @@ func (s *TableStyle) DataRectFlag() string {
 // ESTILOS PREDEFINIDOS
 // =============================================================================
 
-// StyleSimple es el estilo actual — bordes en todas las celdas, sin colores de fondo.
+// StyleSimple es el estilo minimalista — sin bordes en celdas, sin colores de fondo,
+// solo una línea separadora entre productos.
 var StyleSimple = TableStyle{
 	Name: "simple",
 
 	HeaderBg:       colorWhite,
 	HeaderText:     colorBlack,
 	HeaderBorder:   colorBlack,
-	HeaderBorderW:  0.2,
+	HeaderBorderW:  0,
 
 	DataBorder:     colorBlack,
-	DataBorderW:    0.1,
-	DataAltBg:      colorWhite, // sin zebra
+	DataBorderW:    0,
+	DataAltBg:      colorWhite,
 	DataText:       colorBlack,
 	DataTextSalida: colorBlack,
 
@@ -194,8 +195,8 @@ var StyleSimple = TableStyle{
 	TotalesBg:      colorWhite,
 	TotalesText:    colorBlack,
 
-	SeparatorColor: colorGrayLight,
-	SeparatorWidth: 0.2,
+	SeparatorColor: colorBlack,
+	SeparatorWidth: 0.15,
 }
 
 // StyleFormal es el estilo corporativo — azul oscuro, zebra, colores semánticos.

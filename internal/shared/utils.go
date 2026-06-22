@@ -8,14 +8,50 @@ import (
 	"os"
 	"path/filepath"
 	"runtime"
+	"strings"
 
 	"golang.org/x/text/encoding/charmap"
 	"golang.org/x/text/transform"
 )
 
-// FormatNumber formatea número a string con 2 decimales.
+// FormatNumber formatea número a string con 2 decimales y separador de miles con coma.
+// Ejemplo: 30999.99 → "30,999.99"
 func FormatNumber(value float64) string {
-	return fmt.Sprintf("%.2f", value)
+	// Formatear primero con 2 decimales (aplica redondeo)
+	full := fmt.Sprintf("%.2f", value)
+
+	// Separar parte entera y decimal
+	parts := strings.SplitN(full, ".", 2)
+	intStr := parts[0]
+	fracStr := parts[1]
+
+	// Agregar comas a la parte entera cada 3 dígitos desde la derecha
+	neg := false
+	if strings.HasPrefix(intStr, "-") {
+		neg = true
+		intStr = intStr[1:]
+	}
+
+	if len(intStr) > 3 {
+		var sb strings.Builder
+		first := len(intStr) % 3
+		if first > 0 {
+			sb.WriteString(intStr[:first])
+		}
+		for i := first; i < len(intStr); i += 3 {
+			if i > 0 {
+				sb.WriteByte(',')
+			}
+			sb.WriteString(intStr[i : i+3])
+		}
+		intStr = sb.String()
+	}
+
+	if neg {
+		intStr = "-" + intStr
+	}
+
+	return intStr + "." + fracStr
 }
 
 // FormatPeriodo formatea el periodo según el tipo.

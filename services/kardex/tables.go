@@ -229,14 +229,16 @@ func (g *Generator) addInsumoPage(pdf *gofpdf.Fpdf, insumo *KardexInsumo, index,
 
 	title := fmt.Sprintf("%d/%d: %s (%s)", index, total, denomination, barcode)
 
-	// Separador entre productos
+	// Separador entre productos — línea dasheada corta y delgada
 	g.style.ApplySeparator(pdf)
 	leftMargin, _, _, _ := pdf.GetMargins()
 	pageWidth, _ := pdf.GetPageSize()
+	pdf.SetDashPattern([]float64{0.8, 0.8}, 0)
 	pdf.Line(leftMargin, pdf.GetY(), pageWidth-leftMargin, pdf.GetY())
+	pdf.SetDashPattern([]float64{}, 0) // reset a sólido para los siguientes draws
 	pdf.Ln(1)
 
-	pdf.SetFont("Arial", "B", 6.5)
+	pdf.SetFont("Arial", "", 6.5)
 	colorBlack.text(pdf)
 	pdf.CellFormat(0, 5, title, "", 1, "L", false, 0, "")
 	pdf.Ln(1)
@@ -249,37 +251,35 @@ func (g *Generator) addInsumoPage(pdf *gofpdf.Fpdf, insumo *KardexInsumo, index,
 		}
 	}
 
-	g.buildKardexTable(pdf, validMovements, insumo.Kardex.Initial, insumo.Kardex.Finish)
+	g.buildKardexTable(pdf, title, validMovements, insumo.Kardex.Initial, insumo.Kardex.Finish)
 }
 
 // =============================================================================
 // KARDEX TABLE
 // =============================================================================
 
-func (g *Generator) buildKardexTable(pdf *gofpdf.Fpdf, movements []KardexMovimiento, initial *KardexInitial, finish *KardexFinish) {
+// addContinuationHeader maneja el page break agregando una línea "Continua: <producto>".
+// Se usa en buildKardexTable cuando los datos no entran en la página actual.
+func (g *Generator) addContinuationHeader(pdf *gofpdf.Fpdf, title string) {
+	pdf.AddPage()
+	pdf.SetFont("Arial", "B", 6.5)
+	colorBlack.text(pdf)
+	pdf.CellFormat(0, 5, "Continua: "+title, "", 1, "L", false, 0, "")
+	pdf.Ln(1)
+	pdf.SetFont("Arial", "", 5.5)
+}
+
+func (g *Generator) buildKardexTable(pdf *gofpdf.Fpdf, title string, movements []KardexMovimiento, initial *KardexInitial, finish *KardexFinish) {
 	colWidths := g.kardexColWidths(pdf)
 	maxY := g.maxContentY(pdf)
 	rh := rowHeight(1) // Todas las filas de movimientos son 1 línea (datos numéricos cortos)
-
-	// Headers - Fila 1
-	g.renderKardexHeaderRow1(pdf, colWidths)
-	pdf.Ln(-1)
-
-	// Headers - Fila 2
-	g.renderKardexHeaderRow2(pdf, colWidths)
-	pdf.Ln(-1)
 
 	pdf.SetFont("Arial", "", 5.5)
 
 	// Fila de saldo inicial
 	if initial != nil {
 		if pdf.GetY()+rh > maxY {
-			pdf.AddPage()
-			g.renderKardexHeaderRow1(pdf, colWidths)
-			pdf.Ln(-1)
-			g.renderKardexHeaderRow2(pdf, colWidths)
-			pdf.Ln(-1)
-			pdf.SetFont("Arial", "", 5.5)
+			g.addContinuationHeader(pdf, title)
 		}
 		g.style.ApplySaldoInit(pdf)
 		g.renderKardexDataRowContent(pdf, colWidths, "", "", "", "", "", "S. INICIAL", true,
@@ -298,12 +298,7 @@ func (g *Generator) buildKardexTable(pdf *gofpdf.Fpdf, movements []KardexMovimie
 	for idx, m := range movements {
 		// Page break dinámico
 		if pdf.GetY()+rh > maxY {
-			pdf.AddPage()
-			g.renderKardexHeaderRow1(pdf, colWidths)
-			pdf.Ln(-1)
-			g.renderKardexHeaderRow2(pdf, colWidths)
-			pdf.Ln(-1)
-			pdf.SetFont("Arial", "", 5.5)
+			g.addContinuationHeader(pdf, title)
 		}
 
 		isSalida := m.Asunto == "salida"
@@ -360,12 +355,7 @@ func (g *Generator) buildKardexTable(pdf *gofpdf.Fpdf, movements []KardexMovimie
 	// Fila de saldo final
 	if finish != nil {
 		if pdf.GetY()+rh > maxY {
-			pdf.AddPage()
-			g.renderKardexHeaderRow1(pdf, colWidths)
-			pdf.Ln(-1)
-			g.renderKardexHeaderRow2(pdf, colWidths)
-			pdf.Ln(-1)
-			pdf.SetFont("Arial", "", 5.5)
+			g.addContinuationHeader(pdf, title)
 		}
 		g.style.ApplySaldoFinal(pdf)
 		g.renderKardexDataRowContent(pdf, colWidths, "", "", "", "", "", "S. FINAL", true,
@@ -374,34 +364,30 @@ func (g *Generator) buildKardexTable(pdf *gofpdf.Fpdf, movements []KardexMovimie
 	}
 
 	// Fila de totales — COSTO DE VENTAS por ecuación contable: Ini + Compras - Fin
-	if pdf.GetY()+rh > maxY {
-		pdf.AddPage()
-		g.renderKardexHeaderRow1(pdf, colWidths)
-		pdf.Ln(-1)
-		g.renderKardexHeaderRow2(pdf, colWidths)
+	// Solo se dibuja si hay movimientos — evita fila repetida con todos ceros
+	if len(movements) > 0 {
+		if pdf.GetY()+rh > maxY {
+			g.addContinuationHeader(pdf, title)
+		}
+		var costoNeto float64
+		if initial != nil && finish != nil {
+			costoNeto = initial.Parcial + totals.costoEntradas - finish.Parcial
+		} else {
+			costoNeto = totals.costoEntradas - totals.costoSalidas
+		}
+		pdf.SetFont("Arial", "B", 5.5)
+		g.style.ApplyTotales(pdf)
+		dbf := g.style.DataBorderFlag()
+		// Fila TOTALES con celdas mergeadas — coincide con el formato del txt de referencia
+		// (sin celdas vacías: PUnit y Sdo.Cant/PUnit se omiten)
+		pdf.CellFormat(colWidths[0]+colWidths[1]+colWidths[2]+colWidths[3]+colWidths[4]+colWidths[5], lineHt, "TOTALES:", dbf, 0, "C", true, 0, "")
+		pdf.CellFormat(colWidths[6], lineHt, shared.FormatNumber(totals.cantidadEntradas), dbf, 0, "R", true, 0, "")
+		pdf.CellFormat(colWidths[7]+colWidths[8], lineHt, shared.FormatNumber(totals.costoEntradas), dbf, 0, "R", true, 0, "")
+		pdf.CellFormat(colWidths[9], lineHt, shared.FormatNumber(totals.cantidadSalidas), dbf, 0, "R", true, 0, "")
+		pdf.CellFormat(colWidths[10]+colWidths[11], lineHt, shared.FormatNumber(totals.costoSalidas), dbf, 0, "R", true, 0, "")
+		pdf.CellFormat(colWidths[12]+colWidths[13]+colWidths[14], lineHt, fmt.Sprintf("COSTO DE VENTAS: %s", shared.FormatNumber(costoNeto)), dbf, 0, "R", true, 0, "")
 		pdf.Ln(-1)
 	}
-	var costoNeto float64
-	if initial != nil && finish != nil {
-		costoNeto = initial.Parcial + totals.costoEntradas - finish.Parcial
-	} else {
-		costoNeto = totals.costoEntradas - totals.costoSalidas
-	}
-	pdf.SetFont("Arial", "B", 5.5)
-	g.style.ApplyTotales(pdf)
-	dbf := g.style.DataBorderFlag()
-	pdf.CellFormat(colWidths[0]+colWidths[1]+colWidths[2]+colWidths[3]+colWidths[4], lineHt, "", dbf, 0, "C", true, 0, "")
-	pdf.CellFormat(colWidths[5], lineHt, "TOTALES:", dbf, 0, "C", true, 0, "")
-	pdf.CellFormat(colWidths[6], lineHt, shared.FormatNumber(totals.cantidadEntradas), dbf, 0, "R", true, 0, "")
-	pdf.CellFormat(colWidths[7], lineHt, "", dbf, 0, "R", true, 0, "")
-	pdf.CellFormat(colWidths[8], lineHt, shared.FormatNumber(totals.costoEntradas), dbf, 0, "R", true, 0, "")
-	pdf.CellFormat(colWidths[9], lineHt, shared.FormatNumber(totals.cantidadSalidas), dbf, 0, "R", true, 0, "")
-	pdf.CellFormat(colWidths[10], lineHt, "", dbf, 0, "R", true, 0, "")
-	pdf.CellFormat(colWidths[11], lineHt, shared.FormatNumber(totals.costoSalidas), dbf, 0, "R", true, 0, "")
-	pdf.CellFormat(colWidths[12], lineHt, "", dbf, 0, "R", true, 0, "")
-	pdf.CellFormat(colWidths[13], lineHt, "", dbf, 0, "R", true, 0, "")
-	pdf.CellFormat(colWidths[14], lineHt, shared.FormatNumber(costoNeto), dbf, 0, "R", true, 0, "")
-	pdf.Ln(-1)
 }
 
 // renderKardexDataRowContent dibuja una fila completa de la tabla kardex con bordes.
@@ -456,7 +442,10 @@ func (g *Generator) renderKardexDataRowContent(pdf *gofpdf.Fpdf, cw []float64,
 func (g *Generator) renderKardexHeaderRow1(pdf *gofpdf.Fpdf, colWidths []float64) {
 	pdf.SetFont("Arial", "B", 5.5)
 	g.style.ApplyHeader(pdf)
-	hbf := g.style.HeaderBorderFlag()
+	// Cabecera de la sección seguimiento siempre con bordes (ignora el estilo)
+	hbf := "1"
+	colorBlack.draw(pdf)
+	pdf.SetLineWidth(0.2)
 
 	pdf.CellFormat(colWidths[0], headerHt, "Nro", hbf, 0, "C", true, 0, "")
 	pdf.CellFormat(colWidths[1], headerHt, "Fecha", hbf, 0, "C", true, 0, "")
@@ -470,7 +459,10 @@ func (g *Generator) renderKardexHeaderRow1(pdf *gofpdf.Fpdf, colWidths []float64
 func (g *Generator) renderKardexHeaderRow2(pdf *gofpdf.Fpdf, colWidths []float64) {
 	pdf.SetFont("Arial", "B", 5.5)
 	g.style.ApplyHeader(pdf)
-	hbf := g.style.HeaderBorderFlag()
+	// Cabecera de la sección seguimiento siempre con bordes (ignora el estilo)
+	hbf := "1"
+	colorBlack.draw(pdf)
+	pdf.SetLineWidth(0.2)
 
 	pdf.CellFormat(colWidths[0], headerHt, "", hbf, 0, "C", true, 0, "")
 	pdf.CellFormat(colWidths[1], headerHt, "", hbf, 0, "C", true, 0, "")
@@ -499,11 +491,12 @@ func (g *Generator) kardexColWidths(pdf *gofpdf.Fpdf) []float64 {
 	pageWidth, _ := pdf.GetPageSize()
 	available := pageWidth - leftMargin - rightMargin
 
+	// Ratios suman 100% — las celdas ocupan todo el ancho disponible.
 	ratios := []float64{
-		3.3, 6.2, 5.0, 5.0, 6.2, 9.1,
-		6.2, 6.2, 7.4,
-		6.2, 6.2, 7.4,
-		6.2, 6.2, 7.4,
+		3.50, 6.58, 5.31, 5.31, 6.58, 9.66,
+		6.58, 6.58, 7.86,
+		6.58, 6.58, 7.86,
+		6.58, 6.58, 7.86,
 	}
 
 	widths := make([]float64, 15)

@@ -400,7 +400,8 @@ func (g *Generator) addSUNAT13InsumoTable(pdf *gofpdf.Fpdf, insumo *KardexInsumo
 	pageWidth, _ := pdf.GetPageSize()
 	available := pageWidth - leftMargin - rightMargin
 
-	ratios := []float64{6.0, 5.5, 4.0, 6.0, 5.5, 6.5, 6.5, 7.5, 6.5, 6.5, 7.5, 6.5, 6.5, 7.5}
+	// Ratios suman 100% — las celdas ocupan todo el ancho disponible.
+	ratios := []float64{6.78, 6.21, 4.52, 6.78, 6.21, 7.34, 7.34, 8.47, 7.34, 7.34, 8.47, 7.34, 7.34, 8.48}
 	cw := make([]float64, 14)
 	for i, r := range ratios {
 		cw[i] = (r / 100.0) * available
@@ -584,22 +585,36 @@ func (g *Generator) generateSingleFile(insumos []KardexInsumo, filenameBase, fol
 	trk.Update(processKey, 10, "in-progress", "Preparando PDF único")
 
 	pdf := g.createNewPDF()
+
+	// ─── SECCIÓN RESUMEN ───
+	// 1. Portada
 	g.addCoverPage(pdf)
+	// 2. Totales globales (TOTAL GENERAL + RESUMEN INVENTARIO + ANALISIS DE COSTOS)
+	trk.Update(processKey, 13, "in-progress", "Generando totales globales...")
+	g.AddGlobalTotalsSection(pdf, globalTotals)
+	// 3. Tabla resumen por producto
 	g.addProductSummaryPage(pdf, insumos)
 
+	// ─── SECCIÓN SEGUIMIENTO ───
+	// Margin superior antes de las cabeceras
+	pdf.Ln(4)
+	// Cabecera de columnas UNA VEZ al inicio de la sección
+	seguimientoColWidths := g.kardexColWidths(pdf)
+	g.renderKardexHeaderRow1(pdf, seguimientoColWidths)
+	pdf.Ln(-1)
+	g.renderKardexHeaderRow2(pdf, seguimientoColWidths)
+	pdf.Ln(-1)
+
+	// Movimientos por producto + totales por producto (dentro de cada producto)
 	totalInsumos := len(insumos)
 	for i := range insumos {
-		progress := 15 + int(float64(i)/float64(totalInsumos)*75)
+		progress := 18 + int(float64(i)/float64(totalInsumos)*77)
 		trk.Update(processKey, progress, "in-progress",
 			fmt.Sprintf("Procesando insumo %d/%d", i+1, totalInsumos))
 
 		g.addInsumoPage(pdf, &insumos[i], i+1, totalInsumos)
 		insumos[i].Kardex.Movimientos = nil
 	}
-
-	// Sección de totales globales (TOTAL GENERAL + RESUMEN + ANALISIS DE COSTOS)
-	trk.Update(processKey, 92, "in-progress", "Generando totales globales...")
-	g.AddGlobalTotalsSection(pdf, globalTotals)
 
 	filename := filenameBase + ".pdf"
 	outputPath := filepath.Join(folder, filename)
@@ -632,6 +647,18 @@ func (g *Generator) generateBatchPDF(insumos []KardexInsumo, filenameBase, folde
 	g.addProductSummaryPage(pdf, insumos)
 	shared.TriggerGC()
 
+	// Sección de totales globales — después del resumen, antes de los movimientos
+	trk.Update(processKey, 13, "in-progress", "Generando totales globales...")
+	g.AddGlobalTotalsSection(pdf, globalTotals)
+
+	// Cabecera de columnas UNA VEZ al inicio de la sección de seguimiento
+	pdf.Ln(4)
+	seguimientoColWidths := g.kardexColWidths(pdf)
+	g.renderKardexHeaderRow1(pdf, seguimientoColWidths)
+	pdf.Ln(-1)
+	g.renderKardexHeaderRow2(pdf, seguimientoColWidths)
+	pdf.Ln(-1)
+
 	// Procesar insumos en batches
 	batches := g.createOptimizedBatches(insumos)
 	startIndex := 0
@@ -656,10 +683,6 @@ func (g *Generator) generateBatchPDF(insumos []KardexInsumo, filenameBase, folde
 			shared.LogMemoryUsage(fmt.Sprintf("Batch %d/%d", i+1, len(batches)))
 		}
 	}
-
-	// Sección de totales globales (TOTAL GENERAL + RESUMEN + ANALISIS DE COSTOS)
-	trk.Update(processKey, 88, "in-progress", "Generando totales globales...")
-	g.AddGlobalTotalsSection(pdf, globalTotals)
 
 	// Guardar
 	trk.Update(processKey, 95, "in-progress", "Guardando PDF...")

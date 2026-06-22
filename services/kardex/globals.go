@@ -75,8 +75,6 @@ func ComputeGlobalTotals(insumos []KardexInsumo) GlobalTotals {
 //   - RESUMEN INVENTARIO: Inv.Inicial | Inv.Final | Evaluación | Negativos
 //   - ANALISIS DE COSTOS: Merma | CV Neta | Total Salidas
 func (g *Generator) AddGlobalTotalsSection(pdf *gofpdf.Fpdf, gt GlobalTotals) {
-	pdf.AddPage()
-
 	leftMargin, _, rightMargin, _ := pdf.GetMargins()
 	pageWidth, _ := pdf.GetPageSize()
 	available := pageWidth - leftMargin - rightMargin
@@ -84,68 +82,68 @@ func (g *Generator) AddGlobalTotalsSection(pdf *gofpdf.Fpdf, gt GlobalTotals) {
 
 	// ─── SEPARATOR ───
 	g.drawSeparator(pdf, leftMargin, pageWidth, rightMargin)
-	pdf.Ln(2)
+	pdf.Ln(1.5)
 
 	// ──────────────────────────────────────────────────────────────
 	// SECTION 1: TOTAL GENERAL
-	// Formato: TOTAL GENERAL | COMPRAS := xxx | VENTAS := xxx | COSTO DE VENTAS := xxx
+	// Formato: TOTAL GENERAL | COMPRAS: x | VENTAS: x | C. VENTAS: x
 	// ──────────────────────────────────────────────────────────────
-	pdf.SetFont("Arial", "B", 6.5)
+	pdf.SetFont("Arial", "B", 5.5)
 	g.style.ApplyTotales(pdf)
 
-	colLabel := available * 0.22
-	colValue := available * 0.26
+	colLabel := available * 0.18
+	colValue := available * 0.82 / 3 // 3 columnas de datos
 
 	g.renderGlobalRow(pdf, leftMargin, colLabel, colValue, available, rh, []globalCell{
 		{label: "TOTAL GENERAL", value: "", align: "L", isTitle: true},
-		{label: "COMPRAS := ", value: shared.FormatNumber(gt.TotalCompras), align: "R"},
-		{label: "VENTAS := ", value: shared.FormatNumber(gt.TotalVentas), align: "R"},
-		{label: "COSTO DE VENTAS := ", value: shared.FormatNumber(gt.CostoVentas), align: "R"},
+		{label: "COMPRAS: ", value: shared.FormatNumber(gt.TotalCompras), align: "R"},
+		{label: "VENTAS: ", value: shared.FormatNumber(gt.TotalVentas), align: "R"},
+		{label: "C. VENTAS: ", value: shared.FormatNumber(gt.CostoVentas), align: "R"},
 	})
-	pdf.Ln(2)
+	pdf.Ln(1.5)
 
 	// ─── DOUBLE SEPARATOR ───
 	g.drawDoubleSeparator(pdf, leftMargin, pageWidth, rightMargin)
-	pdf.Ln(2)
+	pdf.Ln(1.5)
 
 	// ──────────────────────────────────────────────────────────────
 	// SECTION 2: RESUMEN INVENTARIO
 	// Formato: Inv.Inicial | Inv.Final | Evaluación | Negativos
 	// ──────────────────────────────────────────────────────────────
-	pdf.SetFont("Arial", "B", 6.5)
+	pdf.SetFont("Arial", "B", 5.5)
 	g.style.ApplyTotales(pdf)
 
 	evaluacion := gt.TotalInvFinal - gt.TotalInvInicial
 	colW := available / 4
 
 	g.renderGlobalRow(pdf, leftMargin, 0, colW, available, rh, []globalCell{
-		{label: "INVENTARIO INICIAL : ", value: shared.FormatNumber(gt.TotalInvInicial), align: "R"},
-		{label: "INVENTARIO FINAL : ", value: shared.FormatNumber(gt.TotalInvFinal), align: "R"},
-		{label: "EVALUACION : ", value: shared.FormatNumber(evaluacion), align: "R"},
-		{label: "NEGATIVOS : ", value: fmt.Sprintf("%d", gt.TotalNegativos), align: "R"},
+		{label: "INV. INICIAL: ", value: shared.FormatNumber(gt.TotalInvInicial), align: "R"},
+		{label: "INV. FINAL: ", value: shared.FormatNumber(gt.TotalInvFinal), align: "R"},
+		{label: "EVALUACION: ", value: shared.FormatNumber(evaluacion), align: "R"},
+		{label: "NEGATIVOS: ", value: fmt.Sprintf("%d", gt.TotalNegativos), align: "R"},
 	})
-	pdf.Ln(2)
+	pdf.Ln(1.5)
 
 	// ─── DOUBLE SEPARATOR ───
 	g.drawDoubleSeparator(pdf, leftMargin, pageWidth, rightMargin)
-	pdf.Ln(3)
+	pdf.Ln(2)
 
 	// ──────────────────────────────────────────────────────────────
 	// SECTION 3: ANALISIS DE COSTOS
 	// Título + 3 filas: Merma, CV Neta, Total Salidas
 	// ──────────────────────────────────────────────────────────────
-	pdf.SetFont("Arial", "B", 8)
+	pdf.SetFont("Arial", "B", 6.5)
 	colorBlack.text(pdf)
-	pdf.CellFormat(0, 5, "ANALISIS DE COSTOS", "", 1, "C", false, 0, "")
-	pdf.Ln(2)
+	pdf.CellFormat(0, 4, "ANALISIS DE COSTOS", "", 1, "C", false, 0, "")
+	pdf.Ln(1)
 
 	costItems := []struct {
 		label string
 		value string
 	}{
-		{"COSTO POR MERMA :", shared.FormatNumber(gt.Merma)},
-		{"COSTO DE VENTAS NETA :", shared.FormatNumber(gt.CVNeta)},
-		{"TOTAL COSTO DE SALIDAS :", shared.FormatNumber(gt.CostoVentas)},
+		{"COSTO POR MERMA:", shared.FormatNumber(gt.Merma)},
+		{"COSTO DE VENTAS NETA:", shared.FormatNumber(gt.CVNeta)},
+		{"TOTAL COSTO DE SALIDAS:", shared.FormatNumber(gt.CostoVentas)},
 	}
 
 	for i, item := range costItems {
@@ -154,7 +152,7 @@ func (g *Generator) AddGlobalTotalsSection(pdf *gofpdf.Fpdf, gt GlobalTotals) {
 		} else {
 			g.style.ApplyTotales(pdf)
 		}
-		pdf.SetFont("Arial", "B", 6.5)
+		pdf.SetFont("Arial", "", 5.5)
 
 		labelW := available * 0.55
 		valueW := available * 0.45
